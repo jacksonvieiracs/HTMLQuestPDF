@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System.Web;
 
 namespace HTMLQuestPDF.Utils
@@ -24,7 +24,7 @@ namespace HTMLQuestPDF.Utils
 
         private static string RemoveSpacesBetweenElements(string html)
         {
-            return Regex.Replace(html, @">\s+<", _ => @"><").Replace("<space></space>", "<space> </space>");
+            return Regex.Replace(html, @">[ \t\r\n]+<", _ => @"><").Replace("<space></space>", "<space> </space>");
         }
 
         private static string RemoveSpacesAroundBr(string html)

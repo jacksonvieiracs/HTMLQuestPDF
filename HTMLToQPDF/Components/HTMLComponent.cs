@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using HTMLQuestPDF;
 using HTMLQuestPDF.Extensions;
 using HTMLQuestPDF.Utils;
@@ -18,12 +18,12 @@ namespace HTMLToQPDF.Components
 
         public Dictionary<string, TextStyle> TextStyles { get; } = new Dictionary<string, TextStyle>()
         {
-            { "h1", TextStyle.Default.FontSize(32).Bold() },
-            { "h2", TextStyle.Default.FontSize(28).Bold() },
-            { "h3", TextStyle.Default.FontSize(24).Bold() },
-            { "h4", TextStyle.Default.FontSize(20).Bold() },
-            { "h5", TextStyle.Default.FontSize(16).Bold() },
-            { "h6", TextStyle.Default.FontSize(12).Bold() },
+            { "h1", TextStyle.Default.FontSize(24).Bold() },
+            { "h2", TextStyle.Default.FontSize(18).Bold() },
+            { "h3", TextStyle.Default.FontSize(14.04f).Bold() },
+            { "h4", TextStyle.Default.FontSize(12).Bold() },
+            { "h5", TextStyle.Default.FontSize(9.96f).Bold() },
+            { "h6", TextStyle.Default.FontSize(8.04f).Bold() },
             { "b", TextStyle.Default.Bold() },
             { "strong", TextStyle.Default.Bold() },
             { "i", TextStyle.Default.Italic() },
@@ -36,6 +36,7 @@ namespace HTMLToQPDF.Components
             { "a", TextStyle.Default.Underline() },
             { "sup", TextStyle.Default.Superscript() },
             { "sub", TextStyle.Default.Subscript() },
+            { "p", TextStyle.Default.FontSize(12) }, // 16px (12pt)
 
         };
 
@@ -74,6 +75,7 @@ namespace HTMLToQPDF.Components
             var node = doc.DocumentNode;
 
             CreateSeparateBranchesForTextNodes(node);
+            ParseAndCacheInlineStyles(node);
 
             container.Component(node.GetComponent(new HTMLComponentsArgs(
                 TextStyles,
@@ -143,6 +145,24 @@ namespace HTMLToQPDF.Components
                 {
                     CreateSeparateBranchesForTextNodes(item);
                 }
+            }
+        }
+
+        private void ParseAndCacheInlineStyles(HtmlNode node)
+        {
+            var styleAttr = node.GetAttributeValue("style", "");
+            if (!string.IsNullOrWhiteSpace(styleAttr))
+            {
+                var parsed = InlineStyleParser.Parse(styleAttr);
+                if (parsed.Count > 0)
+                {
+                    node.SetInlineStyles(parsed);
+                }
+            }
+
+            foreach (var child in node.ChildNodes)
+            {
+                ParseAndCacheInlineStyles(child);
             }
         }
     }

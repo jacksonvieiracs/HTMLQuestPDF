@@ -1,6 +1,7 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using HTMLQuestPDF.Extensions;
 using HTMLToQPDF.Components;
+using HTMLToQPDF.Utils;
 using QuestPDF.Fluent;
 using QuestPDF.Infrastructure;
 
@@ -19,7 +20,9 @@ namespace HTMLQuestPDF.Components
 
         public void Compose(IContainer container)
         {
-            if (!node.HasContent() || node.Name.ToLower() == "head") return;
+            if (node.Name.ToLower() == "head") return;
+            // Always render block elements (p, div, etc.) even when empty, so <p></p> or <p>&nbsp;</p> produces a line
+            if (!node.HasContent() && !node.IsBlockNode()) return;
 
             container = ApplyStyles(container);
 
@@ -29,7 +32,11 @@ namespace HTMLQuestPDF.Components
             }
             else
             {
-                ComposeSingle(container);
+                // Empty block: still take one line so <p></p> or <p>&nbsp;</p> produces a new line
+                if (node.IsBlockNode())
+                    container.Text(t => t.Span("\u00A0")); // non-breaking space for line height
+                else
+                    ComposeSingle(container);
             }
         }
 
@@ -46,6 +53,21 @@ namespace HTMLQuestPDF.Components
                 if (args.ClassContainerStyles.TryGetValue(className, out var classStyle))
                 {
                     container = classStyle(container);
+                }
+            }
+
+            if (node.IsBlockNode())
+            {
+                var textAlign = CssValueParser.GetTextAlign(node.GetInlineStyles());
+                if (textAlign != null)
+                {
+                    container = textAlign switch
+                    {
+                        "center" => container.AlignCenter(),
+                        "right" => container.AlignRight(),
+                        "left" => container.AlignLeft(),
+                        _ => container
+                    };
                 }
             }
 

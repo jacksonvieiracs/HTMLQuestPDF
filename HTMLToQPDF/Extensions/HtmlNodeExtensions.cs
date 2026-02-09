@@ -1,9 +1,37 @@
-﻿using HtmlAgilityPack;
+﻿using System.Runtime.CompilerServices;
+using HtmlAgilityPack;
+using HTMLToQPDF.Utils;
 
 namespace HTMLQuestPDF.Extensions
 {
     internal static class HtmlNodeExtensions
     {
+        private static readonly ConditionalWeakTable<HtmlNode, Dictionary<string, string>> InlineStyleCache = new();
+
+        public static Dictionary<string, string>? GetInlineStyles(this HtmlNode node)
+        {
+            if (InlineStyleCache.TryGetValue(node, out var styles))
+                return styles;
+
+            var styleAttr = node.GetAttributeValue("style", "");
+            if (!string.IsNullOrWhiteSpace(styleAttr))
+            {
+                var parsed = InlineStyleParser.Parse(styleAttr);
+                if (parsed.Count > 0)
+                {
+                    InlineStyleCache.AddOrUpdate(node, parsed);
+                    return parsed;
+                }
+            }
+
+            return null;
+        }
+
+        public static void SetInlineStyles(this HtmlNode node, Dictionary<string, string> styles)
+        {
+            InlineStyleCache.AddOrUpdate(node, styles);
+        }
+
         public static HtmlNode? GetListNode(this HtmlNode node)
         {
             if (node.IsList()) return node;

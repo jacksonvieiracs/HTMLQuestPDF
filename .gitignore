@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # Jetbrains
 .idea/
 *.DotSettings.user
+
+docs/
+HTMLToQPDF.TestRender
